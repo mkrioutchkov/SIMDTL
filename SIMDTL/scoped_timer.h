@@ -7,7 +7,7 @@ namespace scoped_timer
     {
         struct scoped_timerBase
         {
-            auto GetDuration() const
+            auto get_duration() const
             {
                 return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - mCreated);
             }
@@ -21,7 +21,7 @@ namespace scoped_timer
             scoped_timer(const F& func) : mFunc(func) {}
             ~scoped_timer()
             {
-                mFunc(GetDuration());
+                mFunc(get_duration());
             }
         private:
             const F mFunc;
@@ -36,6 +36,6 @@ namespace scoped_timer
 
     static auto make_scoped_timer(std::chrono::milliseconds& output)
     {
-        return make_scoped_timer([&](auto& ms) { output = ms; });
+        return make_scoped_timer([&](auto&& ms) { output = ms; });
     }
 }

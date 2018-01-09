@@ -1,5 +1,5 @@
 #pragma once
-#include "SIMD.h"
+#include "simd.h"
 #include "make_integer_sequence.h"
 
 namespace simd
