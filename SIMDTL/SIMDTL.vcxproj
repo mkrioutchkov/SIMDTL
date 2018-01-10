@@ -148,6 +148,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="make_integer_sequence.h" />
+    <ClInclude Include="preserve_constness.h" />
+    <ClInclude Include="range_comparisons.h" />
     <ClInclude Include="simd.h" />
     <ClInclude Include="simd_instructions.h" />
     <ClInclude Include="simd_reverse.h" />

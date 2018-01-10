@@ -56,6 +56,14 @@ namespace simd
             std::fill(std::begin(set_broadcast), std::end(set_broadcast), fill_with);
         }
 
+        template<typename basic_t, typename T>
+        static basic_t broadcast(const T& fill_with)
+        {
+            basic_t value;
+            broadcast(value, fill_with);
+            return value;
+        }
+
         template<typename T>
         static std::enable_if_t<std::is_integral_v<T>, T> force_xor(const T& lhs, const T& rhs)
         {
@@ -73,7 +81,7 @@ namespace simd
         }
 
         template<typename simd_t, typename T, typename ScalarFunc, typename VectorizedFunc>
-        static auto process(T* arr, size_t size, const ScalarFunc& scalar_func, VectorizedFunc& vectorized_func)
+        static auto process(T* arr, size_t size, const ScalarFunc& scalar_func, VectorizedFunc&& vectorized_func)
         {
             typedef decltype(scalar_func(arr, size)) ReturnValue;
             struct scalar_result_t
