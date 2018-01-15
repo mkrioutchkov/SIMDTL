@@ -39,11 +39,11 @@ namespace simd
             {     
                 inline auto convert_case(char* arr, size_t size, const char(&ranges)[sizeof(__m128i)])
                 {
-                    const static auto process_scalar = [](char* arr, size_t size) 
+                    const auto process_scalar = [&](char* arr, size_t size) 
                     { 
-                        std::for_each(arr, arr + size, [](char& c) 
+                        std::for_each(arr, arr + size, [&](char& c) 
                         {
-                            if (c >= 'A' && c <= 'Z')
+                            if (c >= ranges[0] && c <= ranges[1])
                                 c ^= 0x20;
                         });
                         return int();
@@ -55,7 +55,7 @@ namespace simd
                         return int();
                     };
 
-                    transform_in_range<_SIDD_CMP_RANGES | _SIDD_UNIT_MASK>(arr, size, ranges, process_scalar, process_vectorized);
+                    transform_in_range(arr, size, ranges, process_scalar, process_vectorized);
                 }
 
                 inline auto to_lower(char* arr, size_t size)

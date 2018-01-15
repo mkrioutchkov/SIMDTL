@@ -48,19 +48,12 @@ namespace simd
             return std::accumulate(std::begin(values), std::end(values), TOut{});
         }
 
-        template<typename T, typename basic_t>
-        static void broadcast(basic_t& value, const T& fill_with)
-        {
-            // like horizontal_sum, performance here is unlikely to be important as this is usually BEFORE entry into a tight loop
-            auto& set_broadcast = reinterpret_cast<T(&)[simd_t<basic_t>::number_in_register<T>]>(value);
-            std::fill(std::begin(set_broadcast), std::end(set_broadcast), fill_with);
-        }
-
         template<typename basic_t, typename T>
         static basic_t broadcast(const T& fill_with)
         {
             basic_t value;
-            broadcast(value, fill_with);
+            auto& set_broadcast = reinterpret_cast<T(&)[simd_t<basic_t>::number_in_register<T>]>(value);
+            std::fill(std::begin(set_broadcast), std::end(set_broadcast), fill_with);
             return value;
         }
 
@@ -136,10 +129,8 @@ namespace simd
             return int(); // avoid compile error
         };
 
-        typename simd_type::intergral_t replacee_broadcast;
-        detail::broadcast(replacee_broadcast, replacee);
-        typename simd_type::intergral_t replacer_broadcast;
-        detail::broadcast(replacer_broadcast, detail::force_xor(replacer, replacee));
+        auto replacee_broadcast = detail::broadcast<typename simd_type::intergral_t>(replacee);
+        auto replacer_broadcast = detail::broadcast<typename simd_type::intergral_t>(detail::force_xor(replacer, replacee));
 
         const auto vectorized = [&](T* arr)
         {
@@ -166,8 +157,7 @@ namespace simd
             return std::count(arr, arr + size, find);
         };
 
-        typename simd_type::intergral_t find_broadcast;
-        detail::broadcast(find_broadcast, find);
+        auto find_broadcast = detail::broadcast<typename simd_type::intergral_t>(find);
 
         size_t vectorized_count = 0;
         const auto vectorized = [&](const T* arr)
