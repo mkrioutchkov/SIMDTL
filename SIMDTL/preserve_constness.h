@@ -3,7 +3,7 @@
 
 namespace mdk
 {
-    template<typename T, typename U>
+    template<typename, typename U>
     struct preserve_constness
     {
         typedef std::decay_t<U> type;

@@ -147,12 +147,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="add.h" />
+    <ClInclude Include="count.h" />
     <ClInclude Include="make_integer_sequence.h" />
     <ClInclude Include="preserve_constness.h" />
     <ClInclude Include="range_comparisons.h" />
+    <ClInclude Include="replace.h" />
     <ClInclude Include="simd.h" />
-    <ClInclude Include="simd_instructions.h" />
-    <ClInclude Include="simd_reverse.h" />
+    <ClInclude Include="instructions.h" />
+    <ClInclude Include="reverse.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="scoped_timer.h" />
   </ItemGroup>

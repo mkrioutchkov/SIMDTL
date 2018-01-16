@@ -1,5 +1,5 @@
 #pragma once
-#include "simd_instructions.h"
+#include "instructions.h"
 #include <algorithm>
 #include <intrin.h>
 #include <vector>
@@ -105,103 +105,16 @@ namespace simd
             for (size_t i = 0; i < scalar_result.remaining_elements; i += simd_t::number_in_register<T> * number_of_times_to_unroll_loop)
                 vectorized_func(scalar_result.alignment_starts_at + i);
             
-            return std::move(scalar_result);
+            return scalar_result;
+        }
+
+        template<typename F, typename T, typename... Args>
+        static auto do_contiguous(const F& func, T& container, Args&&... args)
+        {
+            return func(container.data(), container.size(), std::forward<Args>(args)...);
         }
     }
 
     typedef detail::simd_t<__m256> AVX;
     typedef detail::simd_t<__m128> SSE;
-
-    template<typename F, typename T, typename... Args>
-    static auto do_contiguous(const F& func, T& container, Args&&... args)
-    {
-        return func(container.data(), container.size(), std::forward<Args>(args)...);
-    }
-
-    template<typename simd_type, typename T>
-    static void replace(T* arr, const size_t size, const T& replacee, const T& replacer)
-    {
-        static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>, "Replace not supported for this type");
-
-        const auto scalar = [&](T* arr, size_t size)
-        {
-            std::replace(arr, arr + size, replacee, replacer);
-            return int(); // avoid compile error
-        };
-
-        auto replacee_broadcast = detail::broadcast<typename simd_type::intergral_t>(replacee);
-        auto replacer_broadcast = detail::broadcast<typename simd_type::intergral_t>(detail::force_xor(replacer, replacee));
-
-        const auto vectorized = [&](T* arr)
-        {
-            auto arr_mem = reinterpret_cast<typename simd_type::intergral_t*>(arr);
-            auto mask = detail::compare_equality<T>(*arr_mem, replacee_broadcast);
-            mask = detail::and_si128(mask, replacer_broadcast);
-            *arr_mem = detail::xor_si128(*arr_mem, mask);
-        };
-
-        detail::process<simd_type>(arr, size, scalar, vectorized);
-    }
-
-    template< typename TSIMD = AVX, typename T, typename U>
-    static void replace(T& contiguous_container, const U& replacee, const U& replacer)
-    {
-        do_contiguous(replace<TSIMD, U>, contiguous_container, replacee, replacer);
-    }
-
-    template<typename simd_type, typename T>
-    static auto count(const T* arr, const size_t size, const T& find)
-    {
-        const auto scalar = [&](const T* arr, size_t size)
-        {
-            return std::count(arr, arr + size, find);
-        };
-
-        auto find_broadcast = detail::broadcast<typename simd_type::intergral_t>(find);
-
-        size_t vectorized_count = 0;
-        const auto vectorized = [&](const T* arr)
-        {
-            auto arr_mem = reinterpret_cast<const typename simd_type::intergral_t*>(arr);
-            const auto v_mask = detail::compare_equality<T>(*arr_mem, find_broadcast);
-            const auto mask = detail::move_mask(v_mask);
-            vectorized_count += _mm_popcnt_u64(mask);
-        };
-
-        auto result = detail::process<simd_type>(arr, size, scalar, vectorized);
-        vectorized_count /= sizeof(T);
-        return result.before_alignment_result + result.after_alignment_result + vectorized_count;
-    }
-
-    template< typename TSIMD = AVX, typename T, typename U>
-    static auto count(T& contiguous_container, const U& find)
-    {
-        return do_contiguous(count<TSIMD, U>, contiguous_container, find);
-    }
-
-    template<typename T, typename memory_t>
-    static void add(T* arr, size_t size, memory_t v_value)
-    {
-        // On a good compiler, there is no reason to use this function
-        const auto scalar_value = *reinterpret_cast<T*>(&v_value);
-        const auto scalar = [&](T* arr, size_t size) 
-        { 
-            std::for_each(arr, arr + size, [&](T& value) { value += scalar_value; });
-            return int();
-        };
-
-        const auto vectorized = [&](T* arr)
-        {
-            auto arr_mem = reinterpret_cast<memory_t*>(arr);
-            *arr_mem = detail::add<T>(*arr_mem, v_value);
-        };
-
-        detail::process<detail::simd_t<memory_t>>(arr, size, scalar, vectorized);
-    }
-
-    template< typename TSIMD = AVX, typename T, typename U>
-    static void add(T& contiguous_container, const U& v_value)
-    {
-        do_contiguous(add<TSIMD, U>, contiguous_container, v_value);
-    }
 }
