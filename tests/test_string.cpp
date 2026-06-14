@@ -57,6 +57,57 @@ TEST_CASE("to_lower / to_upper match std::tolower / std::toupper")
     }
 }
 
+// --- Regression tests for the adversarial-review findings (PCMPISTRM operand
+//     limits: zero boundary truncates, >8 pairs overflow). Each would FAIL on an
+//     SSE4.2 CPU before the guard was added; now the public API falls back to scalar.
+
+TEST_CASE("count_in_range is correct for zero-boundary ranges (regression)")
+{
+    for (std::size_t n : kEdgeSizes)
+    {
+        std::vector<char> data(n);
+        std::mt19937 gen(123u + (unsigned)n);
+        std::uniform_int_distribution<int> d(0, 30);          // includes 0 and small bytes
+        for (auto& c : data) c = static_cast<char>(d(gen));
+        for (auto [lo, hi] : {std::pair<char, char>{0, 20}, {0, 0}})
+        {
+            std::size_t expect = 0;
+            for (char c : data) if (c >= lo && c <= hi) ++expect;
+            CHECK(simdtl::count_in_range(data.data(), n, lo, hi) == expect);
+        }
+    }
+}
+
+TEST_CASE("convert_case is correct for >8 pairs and zero-boundary pairs (regression)")
+{
+    auto ref = [](std::vector<char> v, const char* pairs, int np) {
+        for (auto& c : v)
+            for (int p = 0; p < np; ++p)
+                if (c >= pairs[2 * p] && c <= pairs[2 * p + 1]) { c = static_cast<char>(c ^ 0x20); break; }
+        return v;
+    };
+    for (std::size_t n : kEdgeSizes)
+    {
+        // Deterministic data cycling A..Z so pairs 8-9 (Q-R) are actually present.
+        std::vector<char> data(n);
+        for (std::size_t i = 0; i < n; ++i) data[i] = static_cast<char>('A' + (i % 26));
+
+        // 9 pairs (npairs > 8) -> must fall back to scalar and stay correct.
+        const char pairs9[] = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'};
+        auto got9 = data; simdtl::convert_case(got9.data(), n, pairs9, 9);
+        CHECK(got9 == ref(data, pairs9, 9));
+
+        // Zero-boundary single pair {0,20} on binary data.
+        std::vector<char> bin(n);
+        std::mt19937 gen(321u + (unsigned)n);
+        std::uniform_int_distribution<int> d(0, 30);
+        for (auto& c : bin) c = static_cast<char>(d(gen));
+        const char p0[] = {0, 20};
+        auto gotz = bin; simdtl::convert_case(gotz.data(), n, p0, 1);
+        CHECK(gotz == ref(bin, p0, 1));
+    }
+}
+
 TEST_CASE("flip_case toggles letters only")
 {
     for (std::size_t n : kEdgeSizes)

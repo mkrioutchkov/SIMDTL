@@ -8,8 +8,13 @@
 //
 // NULL CAVEAT: PCMPISTRM uses *implicit* string length, i.e. it stops at the first
 // 0 byte in a 16-byte chunk. The SSE4.2 fast path is therefore for NUL-free text
-// (normal string data); an embedded 0 ends that chunk's scan early. The scalar
-// fallback is fully general. (This matches the original module's contract.)
+// (normal string data); an embedded 0 in the DATA ends that chunk's scan early.
+//
+// The implicit length also constrains the RANGES operand: it must be 1..8 [lo,hi]
+// pairs with no 0 boundary byte (a 0 would truncate it). The public API guards on
+// this and silently falls back to the (fully general) scalar path when a request
+// can't be encoded faithfully, so callers always get correct results regardless of
+// bounds/pair count; only the speed differs.
 #include "platform/arch_macros.hpp"
 #include "platform/cpu.hpp"
 
@@ -51,6 +56,18 @@ namespace simdtl
         {
             static const bool v = platform::detect_cpu_features().sse42;
             return v;
+        }
+
+        // PCMPISTRM uses an IMPLICIT-LENGTH ranges operand: it is read as a
+        // NUL-terminated string of at most 8 [lo,hi] pairs (16 bytes). So the
+        // SSE4.2 path is only faithful when there are 1..8 pairs AND no boundary
+        // byte is 0 (a 0 truncates the operand). Otherwise we must use scalar.
+        inline bool ranges_ok_for_sse42(const char* pairs, int npairs) noexcept
+        {
+            if (npairs < 1 || npairs > 8) return false;
+            for (int j = 0; j < npairs * 2; ++j)
+                if (pairs[j] == 0) return false;
+            return true;
         }
 
         inline unsigned popcnt(unsigned m) noexcept
@@ -105,7 +122,10 @@ namespace simdtl
     inline std::size_t count_in_range(const char* s, std::size_t n, char lo, char hi) noexcept
     {
 #if SIMDTL_ARCH_X86
-        if (detail::have_sse42()) return detail::count_in_range_sse42(s, n, lo, hi);
+        // A 0 boundary would truncate PCMPISTRM's implicit-length ranges operand
+        // (-> 0 matches), so only take the SSE4.2 path when both bounds are non-zero.
+        if (detail::have_sse42() && lo != 0 && hi != 0)
+            return detail::count_in_range_sse42(s, n, lo, hi);
 #endif
         return detail::count_in_range_scalar(s, n, lo, hi);
     }
@@ -114,7 +134,13 @@ namespace simdtl
     inline void convert_case(char* s, std::size_t n, const char* pairs, int npairs) noexcept
     {
 #if SIMDTL_ARCH_X86
-        if (detail::have_sse42()) { detail::convert_case_sse42(s, n, pairs, npairs); return; }
+        // Use SSE4.2 only when PCMPISTRM can faithfully encode the ranges (1..8
+        // pairs, no 0 boundary); otherwise the scalar path handles it correctly.
+        if (detail::have_sse42() && detail::ranges_ok_for_sse42(pairs, npairs))
+        {
+            detail::convert_case_sse42(s, n, pairs, npairs);
+            return;
+        }
 #endif
         detail::convert_case_scalar(s, n, pairs, npairs);
     }
