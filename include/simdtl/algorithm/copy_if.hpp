@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
+#include <vector>
 
 namespace simdtl
 {
@@ -65,6 +66,37 @@ namespace simdtl
         }
         for (; i < n; ++i)
             if (first[i] != value) first[k++] = first[i];
+        return k;
+    }
+
+    // unique: drop consecutive duplicates in place; return the new logical length
+    // (std::unique semantics). Sequential by nature; compares each element to the
+    // ORIGINAL predecessor (kept in `prev`) so in-place writes don't corrupt it.
+    template <class T>
+    std::size_t unique(T* first, std::size_t n) noexcept
+    {
+        if (n == 0) return 0;
+        std::size_t k = 1;
+        T prev = first[0];
+        for (std::size_t i = 1; i < n; ++i)
+        {
+            const T cur = first[i];
+            if (!(cur == prev)) first[k++] = cur;
+            prev = cur;
+        }
+        return k;
+    }
+
+    // partition: rearrange so all pred-true elements come first; return the
+    // partition point (count of true). STABLE (preserves relative order within
+    // each side) via two SIMD compaction passes through a scratch buffer.
+    template <class T, class Pred>
+    std::size_t partition(T* first, std::size_t n, Pred pred) noexcept
+    {
+        std::vector<T> tmp(n);
+        const std::size_t k = copy_if(first, n, tmp.data(), pred);            // trues, in order
+        copy_if(first, n, tmp.data() + k, [&](auto x) { return !pred(x); });  // falses, in order
+        for (std::size_t i = 0; i < n; ++i) first[i] = tmp[i];
         return k;
     }
 

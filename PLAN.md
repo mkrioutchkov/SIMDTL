@@ -129,7 +129,8 @@ so the swap is provably one directory.
   the STL (`tests/test_compaction.cpp`). Results in [docs/M3_RESULTS.md](docs/M3_RESULTS.md):
   cache-resident `remove` ~1.14× `std::remove`; `reverse` is memory-bandwidth-bound
   (parity) — correctness is the deliverable, `count` remains the perf headline.
-  AVX-512 `vpcompress` path + `partition`/`unique` remain follow-ups.
+  `partition` (stable) + `unique` now added (portable). AVX-512 `vpcompress`
+  remains a follow-up.
 - **M4 — String-range port ✅ (done)** — `count_in_range`, `to_lower`/`to_upper`/
   `flip_case` ported from the old `range_comparisons.h` to `string_range.hpp`, using
   SSE4.2 `_mm_cmpistrm`, **runtime-gated on CPUID SSE4.2** (not `__SSE4_2__`) with a

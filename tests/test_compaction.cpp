@@ -89,6 +89,34 @@ TEST_CASE("reverse matches std::reverse (dispatched int32 + portable any-size)")
     check_reverse<float>();
 }
 
+TEST_CASE("unique matches std::unique")
+{
+    for (std::size_t n : kEdgeSizes)
+    {
+        // small value range -> plenty of consecutive duplicates
+        auto data = make_values<int>(n, 0, 2, 505u + (unsigned)n);
+        auto e = data;
+        e.erase(std::unique(e.begin(), e.end()), e.end());
+        data.resize(simdtl::unique(data.data(), n));
+        CHECK(data == e);
+    }
+}
+
+TEST_CASE("partition matches std::stable_partition (stable + partition point)")
+{
+    for (std::size_t n : kEdgeSizes)
+    {
+        auto data = make_values<int>(n, 0, 9, 606u + (unsigned)n);
+        auto e = data;
+        auto sp = std::stable_partition(e.begin(), e.end(), [](int x) { return x < 5; });
+        const std::size_t point = static_cast<std::size_t>(sp - e.begin());
+
+        const std::size_t k = simdtl::partition(data.data(), n, [](auto x) { using X = decltype(x); return x < X(5); });
+        CHECK(k == point);
+        CHECK(data == e);          // stable -> exact element-wise match
+    }
+}
+
 TEST_CASE("M3 kernels installed when the CPU supports AVX2")
 {
     using namespace simdtl::platform;
