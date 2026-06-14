@@ -26,3 +26,13 @@ if(SIMDTL_FAST_KERNELS)
 endif()
 
 add_test(NAME test_count COMMAND test_count)
+
+# M2 algorithms (portable std::simd paths only — no kernels needed yet).
+add_executable(test_algorithms test_algorithms.cpp)
+target_link_libraries(test_algorithms PRIVATE simdtl::simdtl doctest)
+if(MSVC)
+    target_compile_options(test_algorithms PRIVATE /EHsc /W4 /external:W0)
+else()
+    target_compile_options(test_algorithms PRIVATE -Wall -Wextra)
+endif()
+add_test(NAME test_algorithms COMMAND test_algorithms)

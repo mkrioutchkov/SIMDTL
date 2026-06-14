@@ -49,4 +49,12 @@ namespace simdtl
     template <class V> auto hsum(const V& v) noexcept { return stdx::reduce(v); }
     template <class V> auto hmin(const V& v) noexcept { return stdx::hmin(v); }
     template <class V> auto hmax(const V& v) noexcept { return stdx::hmax(v); }
+
+    // Element-wise (lane-wise) min/max of two vectors.
+    template <class V> V elem_min(const V& a, const V& b) noexcept { return stdx::min(a, b); }
+    template <class V> V elem_max(const V& a, const V& b) noexcept { return stdx::max(a, b); }
+
+    // Masked/selected assignment: `where(mask, v) = value;` writes only true lanes.
+    template <class Mask, class V>
+    auto where(const Mask& m, V& v) noexcept { return stdx::where(m, v); }
 } // namespace simdtl

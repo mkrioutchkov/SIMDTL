@@ -117,8 +117,12 @@ so the swap is provably one directory.
   matrix (MSVC/GCC/Clang/AppleClang/`ubuntu-24.04-arm` NEON/Emscripten), seam lint.
   Results in [docs/M1_RESULTS.md](docs/M1_RESULTS.md): dispatched kernel **3.46×**
   `std::count`; portable path 0.90× (the M0 finding, confirmed).
-- **M2 — Stamp the template** — find/find_if, min/max/minmax, reduce/accumulate,
-  equal/mismatch, transform (+`vectorize()`), replace/replace_if.
+- **M2 — Stamp the template ✅ (done)** — find/find_if, min/max/minmax (value +
+  `min_element`/`max_element`), reduce/accumulate, equal/mismatch, transform
+  (unary/binary), replace/replace_if (`where()=value`, float-safe). All portable
+  std::simd paths, each differential-tested vs the STL across the edge-size matrix
+  and int8/16/32/64 + float/double (`tests/test_algorithms.cpp`). Fast intrinsic
+  kernels for these remain M3.
 - **M3 — Cross-lane marquee** — `compress_store` (scalar + AVX-512 + AVX2 LUT) →
   copy_if/remove_if/partition; any-size `reverse_inplace`.
 - **M4 — String-range port + polish** — SSE4.2 module + scalar fallback; delete-pass;

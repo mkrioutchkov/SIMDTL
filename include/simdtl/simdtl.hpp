@@ -14,14 +14,14 @@
 #include "platform/dispatch.hpp"
 #include "detail/driver.hpp"
 #include "algorithm/count.hpp"
+#include "algorithm/find.hpp"        // M2: find / find_if
+#include "algorithm/minmax.hpp"      // M2: min/max/minmax (value + element)
+#include "algorithm/reduce.hpp"      // M2: reduce / accumulate
+#include "algorithm/equal.hpp"       // M2: equal / mismatch
+#include "algorithm/transform.hpp"   // M2: transform (unary/binary)
+#include "algorithm/replace.hpp"     // M2: replace / replace_if (where()=value)
 
 // Future milestones (kept here as the public surface map):
-// #include "algorithm/find.hpp"       // M2: find / find_if
-// #include "algorithm/minmax.hpp"     // M2: min/max/minmax
-// #include "algorithm/reduce.hpp"     // M2: reduce / accumulate
-// #include "algorithm/equal.hpp"      // M2: equal / mismatch
-// #include "algorithm/transform.hpp"  // M2: transform (+ vectorize adapter)
-// #include "algorithm/replace.hpp"    // M2: replace / replace_if (where()=value)
 // #include "crosslane/compress.hpp"   // M3: stream compaction
 // #include "crosslane/reverse.hpp"    // M3: any-size reverse
 // #include "algorithm/copy_if.hpp"    // M3: copy_if / remove_if / partition
