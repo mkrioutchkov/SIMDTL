@@ -6,22 +6,17 @@
 // THIS file plus names.hpp, with zero algorithm changes. A CI grep-lint enforces
 // that `vir::`/`stdx::` never appear outside include/simdtl/backend/.
 //
-// Selection priority: native C++26 <simd> → experimental TS → vir-simd backport.
-// Define SIMDTL_FORCE_VIR_SIMD to pin the vir-simd backport (useful for matching
-// MSVC behaviour across compilers in CI).
+// We do NOT include <experimental/simd> directly: it merely needs to *exist* for
+// __has_include to be true (libc++ ships a stub on macOS/Emscripten that does NOT
+// define std::experimental::parallelism_v2), which would break those platforms.
+// vir-simd does the correct detection internally — it uses libstdc++'s real
+// <experimental/simd> when present (keeping the native ABI on GCC) and its own
+// portable fallback otherwise. So: native C++26 <simd> if available, else vir-simd.
 
-#if defined(SIMDTL_FORCE_VIR_SIMD)
-#  include <vir/simd.h>
-namespace simdtl { namespace stdx = vir::stdx; }
-#  define SIMDTL_SIMD_BACKEND "vir-simd (forced)"
-#elif defined(__cpp_lib_simd)
+#if defined(__cpp_lib_simd) && !defined(SIMDTL_FORCE_VIR_SIMD)
 #  include <simd>
 namespace simdtl { namespace stdx = std; }            // C++26: std::simd lives in std
 #  define SIMDTL_SIMD_BACKEND "std (C++26)"
-#elif __has_include(<experimental/simd>)
-#  include <experimental/simd>
-namespace simdtl { namespace stdx = std::experimental::parallelism_v2; }
-#  define SIMDTL_SIMD_BACKEND "std::experimental (Parallelism TS)"
 #else
 #  include <vir/simd.h>
 namespace simdtl { namespace stdx = vir::stdx; }
