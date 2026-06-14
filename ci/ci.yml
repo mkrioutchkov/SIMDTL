@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [master, modern-rewrite]
+  pull_request:
+
+jobs:
+  seam-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Seam lint (no backend names outside backend/)
+        shell: pwsh
+        run: ./scripts/lint-seam.ps1
+
+  build-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: "windows-msvc-x64", os: windows-latest, fast_kernels: ON,  cxx: cl }
+          - { name: "ubuntu-gcc-x64",   os: ubuntu-latest,  fast_kernels: ON,  cxx: g++ }
+          - { name: "ubuntu-clang-x64", os: ubuntu-latest,  fast_kernels: ON,  cxx: clang++ }
+          - { name: "macos-arm64",      os: macos-latest,   fast_kernels: OFF, cxx: clang++ }
+          - { name: "ubuntu-arm64-neon", os: ubuntu-24.04-arm, fast_kernels: OFF, cxx: g++ }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup MSVC environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with: { arch: x64 }
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+      - name: Configure
+        run: cmake -G Ninja -B build
+              -DCMAKE_BUILD_TYPE=Release
+              -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+              -DSIMDTL_BUILD_TESTS=ON
+              -DSIMDTL_FAST_KERNELS=${{ matrix.fast_kernels }}
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  # Proves the WASM/no-SSE4.2 scalar path compiles; runs the lib smoke under node.
+  emscripten:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mymindstorm/setup-emsdk@v14
+      - name: Configure (Emscripten, header-only / no fast kernels)
+        run: emcmake cmake -B build -DSIMDTL_BUILD_TESTS=ON -DSIMDTL_FAST_KERNELS=OFF
+      - name: Build
+        run: cmake --build build
