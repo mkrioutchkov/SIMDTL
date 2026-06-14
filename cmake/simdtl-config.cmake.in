@@ -1,0 +1,11 @@
+@PACKAGE_INIT@
+
+# vir-simd is only an external dependency when SIMDTL was configured to use a
+# system-installed copy; the vendored/fetched providers carry headers inline.
+if("@SIMDTL_VIR_SIMD_PROVIDER@" STREQUAL "system")
+    include(CMakeFindDependencyMacro)
+    find_dependency(vir-simd)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/simdtl-targets.cmake")
+check_required_components(simdtl)

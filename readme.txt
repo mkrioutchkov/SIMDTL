@@ -1,1 +1,0 @@
-eventually will probably be header only and cross platform

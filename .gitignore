@@ -1,0 +1,20 @@
+# Build outputs
+/build/
+/out/
+/cmake-build-*/
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.asm
+*.lib
+*.exp
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+*.cmake.user
+
+# IDE / VS
+.vs/
+*.vcxproj.user
