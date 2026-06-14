@@ -50,22 +50,25 @@ TEST_CASE("remove_if matches std::remove_if")
     }
 }
 
-TEST_CASE("remove(value) matches std::remove (dispatched int32 + portable)")
+template <class T>
+static void check_remove_matches_std()
 {
     for (std::size_t n : kEdgeSizes)
-    {
-        for (int value : {0, 5, 9})
+        for (T value : {T(0), T(5), T(9)})
         {
-            auto data = make_values<std::int32_t>(n, 0, 9, 303u + (unsigned)n);
+            auto data = make_values<T>(n, 0, 9, 303u + static_cast<unsigned>(n));
             auto e = data;
-            auto se = std::remove(e.begin(), e.end(), value);
-            e.erase(se, e.end());
-
-            const std::size_t k = simdtl::remove(data.data(), n, value);
-            data.resize(k);
+            e.erase(std::remove(e.begin(), e.end(), value), e.end());
+            data.resize(simdtl::remove(data.data(), n, value));
             CHECK(data == e);
         }
-    }
+}
+
+TEST_CASE("remove(value) matches std::remove across widths (1/2/4-byte, dispatched + portable)")
+{
+    check_remove_matches_std<std::int8_t>();    // AVX2 pshufb byte left-pack kernel
+    check_remove_matches_std<std::int16_t>();   // AVX2 pshufb word left-pack kernel
+    check_remove_matches_std<std::int32_t>();   // AVX2 vpermd kernel
 }
 
 template <class T>
@@ -124,6 +127,8 @@ TEST_CASE("M3 kernels installed when the CPU supports AVX2")
     if (best_isa() >= isa_level::avx2)
     {
         CHECK(remove_i32_slot() != nullptr);
+        CHECK(remove_i16_slot() != nullptr);
+        CHECK(remove_i8_slot()  != nullptr);
         CHECK(reverse_i32_slot() != nullptr);
     }
 #endif

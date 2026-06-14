@@ -67,4 +67,28 @@ namespace simdtl::platform
             reverse_i32_installed_level() = lvl;
         }
     }
+
+    // --- count(value) for 1- and 2-byte ints (AVX2 cmpeq + movemask + popcount) ---
+    using count_i8_fn  = std::size_t (*)(const std::int8_t*,  std::size_t, std::int8_t)  noexcept;
+    using count_i16_fn = std::size_t (*)(const std::int16_t*, std::size_t, std::int16_t) noexcept;
+    inline count_i8_fn&  count_i8_slot()  noexcept { static count_i8_fn  fn = nullptr; return fn; }
+    inline count_i16_fn& count_i16_slot() noexcept { static count_i16_fn fn = nullptr; return fn; }
+    inline isa_level& count_i8_lvl()  noexcept { static isa_level l = isa_level::scalar; return l; }
+    inline isa_level& count_i16_lvl() noexcept { static isa_level l = isa_level::scalar; return l; }
+    inline void register_count_i8(isa_level lvl, count_i8_fn fn) noexcept
+    { if (best_isa() >= lvl && (count_i8_slot() == nullptr || lvl > count_i8_lvl())) { count_i8_slot() = fn; count_i8_lvl() = lvl; } }
+    inline void register_count_i16(isa_level lvl, count_i16_fn fn) noexcept
+    { if (best_isa() >= lvl && (count_i16_slot() == nullptr || lvl > count_i16_lvl())) { count_i16_slot() = fn; count_i16_lvl() = lvl; } }
+
+    // --- remove(value) compaction for 1- and 2-byte ints (pshufb left-pack) ---
+    using remove_i8_fn  = std::size_t (*)(std::int8_t*,  std::size_t, std::int8_t)  noexcept;
+    using remove_i16_fn = std::size_t (*)(std::int16_t*, std::size_t, std::int16_t) noexcept;
+    inline remove_i8_fn&  remove_i8_slot()  noexcept { static remove_i8_fn  fn = nullptr; return fn; }
+    inline remove_i16_fn& remove_i16_slot() noexcept { static remove_i16_fn fn = nullptr; return fn; }
+    inline isa_level& remove_i8_lvl()  noexcept { static isa_level l = isa_level::scalar; return l; }
+    inline isa_level& remove_i16_lvl() noexcept { static isa_level l = isa_level::scalar; return l; }
+    inline void register_remove_i8(isa_level lvl, remove_i8_fn fn) noexcept
+    { if (best_isa() >= lvl && (remove_i8_slot() == nullptr || lvl > remove_i8_lvl())) { remove_i8_slot() = fn; remove_i8_lvl() = lvl; } }
+    inline void register_remove_i16(isa_level lvl, remove_i16_fn fn) noexcept
+    { if (best_isa() >= lvl && (remove_i16_slot() == nullptr || lvl > remove_i16_lvl())) { remove_i16_slot() = fn; remove_i16_lvl() = lvl; } }
 } // namespace simdtl::platform

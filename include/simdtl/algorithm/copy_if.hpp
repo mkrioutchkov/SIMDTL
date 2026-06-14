@@ -53,8 +53,17 @@ namespace simdtl
     std::size_t remove(T* first, std::size_t n, T value) noexcept
     {
         if constexpr (std::is_same_v<T, std::int32_t>)
-            if (auto fn = platform::remove_i32_slot())
-                return fn(first, n, value);
+        {
+            if (auto fn = platform::remove_i32_slot()) return fn(first, n, value);
+        }
+        else if constexpr (std::is_same_v<T, std::int16_t>)
+        {
+            if (auto fn = platform::remove_i16_slot()) return fn(first, n, value);
+        }
+        else if constexpr (std::is_same_v<T, std::int8_t>)
+        {
+            if (auto fn = platform::remove_i8_slot()) return fn(first, n, value);
+        }
 
         using V = native<T>;
         constexpr std::size_t W = V::size();

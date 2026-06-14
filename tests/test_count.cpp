@@ -34,8 +34,9 @@ static void check_count_matches_std()
 
 TEST_CASE("count matches std::count across element types")
 {
-    check_count_matches_std<std::int32_t>();   // dispatched fast path (+ portable)
-    check_count_matches_std<std::int16_t>();
+    check_count_matches_std<std::int32_t>();   // dispatched AVX2 kernel (+ portable)
+    check_count_matches_std<std::int16_t>();   // dispatched AVX2 kernel
+    check_count_matches_std<std::int8_t>();    // dispatched AVX2 kernel
     check_count_matches_std<std::int64_t>();
     check_count_matches_std<std::uint8_t>();
     check_count_matches_std<float>();
@@ -65,6 +66,8 @@ TEST_CASE("runtime dispatch installs the AVX2 kernel when the CPU supports it")
     {
         CHECK(count_i32_slot() != nullptr);
         CHECK(count_i32_installed_level() == isa_level::avx2);
+        CHECK(count_i16_slot() != nullptr);
+        CHECK(count_i8_slot()  != nullptr);
     }
 #else
     CHECK(count_i32_slot() == nullptr);   // header-only: portable path only

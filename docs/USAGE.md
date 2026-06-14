@@ -142,11 +142,17 @@ XGETBV confirm support (with a scalar/portable floor so it never SIGILLs):
 
 | operation | runtime-dispatched fast path | otherwise |
 |---|---|---|
-| `count` (int32) | AVX2 kernel | portable `std::simd` |
-| `remove` (int32) | AVX2 compaction kernel | portable |
+| `count` (int8 / int16 / int32) | AVX2 `cmpeq`+`movemask`+`popcnt` kernel | portable `std::simd` |
+| `remove` (int8 / int16 / int32) | AVX2 compaction kernel (`pshufb`/`vpermd` left-pack) | portable |
 | `reverse` (int32) | AVX2 block-reverse kernel | portable (any element size) |
 | string ops (`char`) | SSE4.2 `cmpistrm` | portable scalar |
 | everything else | — | portable `std::simd` |
+
+> Perf note: on MSVC at `/arch:AVX2` the compiler auto-vectorizes simple `std::` loops
+> (count/replace) and even byte/word `std::remove`, so the kernels mostly *tie* there;
+> the clear win is `int32` compaction (`std::remove<int32>` stays scalar) and any platform
+> whose compiler doesn't auto-vectorize. The kernels also rescue narrow-type performance
+> from the portable fallback (which is ~80× slower for `int8` on MSVC).
 
 **MSVC caveat:** vir-simd's `fixed_size<N>` fallback does not emit packed AVX on
 MSVC (it lowers to scalar ops). So on MSVC the portable layer is correctness +
