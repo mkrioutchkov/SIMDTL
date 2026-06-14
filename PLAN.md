@@ -111,10 +111,12 @@ so the swap is provably one directory.
 - **M0 — Foundation de-risk ✅ (done)** — repo scaffold, CMake INTERFACE target,
   vendored vir-simd, L0 seam, L1 CPU probe (CPUID+XGETBV), auto-vec smoke benchmark.
   Both M0 tools build & run on MSVC; findings recorded.
-- **M1 — `count` vertical slice** — `for_each_chunk` driver, `dispatch.hpp` fn-ptr
-  table + one AVX2 `count` kernel through it (proves multi-TU dispatch + linkage),
-  doctest differential harness, nanobench, GitHub Actions matrix
-  (MSVC/GCC/Clang/AppleClang/`ubuntu-24.04-arm` NEON/Emscripten), seam-grep lint.
+- **M1 — `count` vertical slice ✅ (done)** — `for_each_chunk` driver, `dispatch.hpp`
+  fn-ptr table + an AVX2 `count<int32>` kernel through it (multi-TU dispatch proven),
+  doctest differential harness (all edge sizes × types), nanobench, GitHub Actions
+  matrix (MSVC/GCC/Clang/AppleClang/`ubuntu-24.04-arm` NEON/Emscripten), seam lint.
+  Results in [docs/M1_RESULTS.md](docs/M1_RESULTS.md): dispatched kernel **3.46×**
+  `std::count`; portable path 0.90× (the M0 finding, confirmed).
 - **M2 — Stamp the template** — find/find_if, min/max/minmax, reduce/accumulate,
   equal/mismatch, transform (+`vectorize()`), replace/replace_if.
 - **M3 — Cross-lane marquee** — `compress_store` (scalar + AVX-512 + AVX2 LUT) →

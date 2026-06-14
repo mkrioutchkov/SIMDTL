@@ -65,9 +65,15 @@ endif()
 
 if(SIMDTL_BUILD_TESTS)
     enable_testing()
+    add_library(doctest INTERFACE)
+    target_include_directories(doctest SYSTEM INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party)   # <doctest/doctest.h>
     add_subdirectory(tests)          # M1: doctest differential suite
 endif()
 if(SIMDTL_BUILD_BENCHMARKS)
+    add_library(nanobench INTERFACE)
+    target_include_directories(nanobench SYSTEM INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party)   # <nanobench/nanobench.h>
     add_subdirectory(benchmarks)     # M1: nanobench harness
 endif()
 

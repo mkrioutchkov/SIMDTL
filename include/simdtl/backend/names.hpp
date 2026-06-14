@@ -17,9 +17,17 @@
 //   elem_aligned       element_aligned      simd_flag_default
 //   vec_aligned        vector_aligned       simd_flag_aligned
 #include "simd.hpp"
+#include <cstddef>
 
 namespace simdtl
 {
+    // Stable type aliases so nothing above this layer ever spells the backend
+    // (`stdx::`) directly — a CI lint enforces it, making the C++26 swap one file.
+    template <class T> using native = stdx::native_simd<T>;
+    template <class T> using native_mask = typename stdx::native_simd<T>::mask_type;
+    template <class T, std::size_t N>
+    using fixed = stdx::simd<T, stdx::simd_abi::fixed_size<N>>;
+
     // Alignment flags used at every load/store site. Default to element_aligned
     // (always safe for arbitrary container memory); vec_aligned is the fast,
     // alignment-required form.
