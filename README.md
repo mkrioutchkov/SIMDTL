@@ -23,6 +23,22 @@ cross-platform — built *on top of* the `std::simd` programming model.
 | **L3 cross-lane** | `compress_store`, `reverse_inplace`, horizontal reductions | SIMDTL (the value-add `std::simd` can't express) |
 | **L4 algorithms** | `count` `find` `min/max` `reduce` `equal` `transform` `replace` `copy_if` … + SSE4.2 string ops | SIMDTL |
 
+## Usage
+
+```cpp
+#include <simdtl/simdtl.hpp>
+
+std::vector<int> v = {3,1,2,2,5,2};
+std::size_t twos = simdtl::count(v, 2);                                   // 3
+std::size_t gt2  = simdtl::count_if(v, [](auto x){ using X = decltype(x); return x > X(2); });
+v.resize(simdtl::remove(v.data(), v.size(), 2));                          // drop all 2s (AVX2 kernel)
+simdtl::reverse(v.data(), v.size());
+```
+
+Full examples for every algorithm, the **elemental-predicate** pattern
+(`[](auto x){ return x > decltype(x)(4); }`), and how **compile-time width vs.
+runtime dispatch** works are in **[docs/USAGE.md](docs/USAGE.md)**.
+
 ## Building
 
 Requires Visual Studio 2026 (MSVC 14.5x) with C++20. `vir-simd` is vendored under

@@ -28,6 +28,12 @@ jobs:
           - { name: "ubuntu-arm64-neon", os: ubuntu-24.04-arm, fast_kernels: OFF, cxx: g++ }
     steps:
       - uses: actions/checkout@v4
+      - name: Show CPU features (diagnostic; decides AVX-512 support)
+        if: runner.os == 'Linux' && contains(matrix.name, 'x64')
+        run: |
+          echo "model: $(lscpu | sed -n 's/^Model name:[[:space:]]*//p')"
+          flags=$(grep -o 'avx512[a-z]*' /proc/cpuinfo | sort -u | tr '\n' ' ')
+          echo "avx512 flags: ${flags:-<none>}"
       - name: Setup MSVC environment
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
