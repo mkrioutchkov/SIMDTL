@@ -36,3 +36,5 @@ simdtl_add_test(test_algorithms)   # M2 portable paths only
 
 simdtl_add_test(test_compaction)   # M3 cross-lane
 simdtl_add_avx2_kernel(test_compaction crosslane_avx2.cpp)
+
+simdtl_add_test(test_string)       # M4 SSE4.2 string-range (runtime-gated, header-only)

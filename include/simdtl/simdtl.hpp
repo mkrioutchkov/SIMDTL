@@ -23,6 +23,7 @@
 #include "crosslane/compress.hpp"    // M3: stream-compaction primitive
 #include "crosslane/reverse.hpp"     // M3: reverse (any element size; AVX2 int32)
 #include "algorithm/copy_if.hpp"     // M3: copy_if / remove_if / remove
+#include "string_range.hpp"          // M4: SSE4.2 count_in_range / to_lower/upper/flip_case
 
 // Future milestones (kept here as the public surface map):
 // #include "crosslane/reverse.hpp"    // M3: any-size reverse

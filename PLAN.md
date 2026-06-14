@@ -130,8 +130,14 @@ so the swap is provably one directory.
   cache-resident `remove` ~1.14× `std::remove`; `reverse` is memory-bandwidth-bound
   (parity) — correctness is the deliverable, `count` remains the perf headline.
   AVX-512 `vpcompress` path + `partition`/`unique` remain follow-ups.
-- **M4 — String-range port + polish** — SSE4.2 module + scalar fallback; delete-pass;
-  install/export; benchmark report.
+- **M4 — String-range port ✅ (done)** — `count_in_range`, `to_lower`/`to_upper`/
+  `flip_case` ported from the old `range_comparisons.h` to `string_range.hpp`, using
+  SSE4.2 `_mm_cmpistrm`, **runtime-gated on CPUID SSE4.2** (not `__SSE4_2__`) with a
+  portable scalar fallback (ARM/WASM/older x86). Differential-tested vs independent
+  references (`std::tolower`/`toupper` + manual counts) on NUL-free text
+  (`tests/test_string.cpp`). NUL caveat documented (PCMPISTRM implicit length).
+  Remaining polish (AVX-512 `vpcompress`, `partition`/`unique`, install-package
+  smoke) tracked as follow-ups.
 - **M5 (stretch)** — gather/scatter; NEON fast paths; native `<simd>` swap rehearsal.
 
 ## Decisions made
