@@ -13,6 +13,24 @@ cross-platform — built *on top of* the `std::simd` programming model.
 > and the build/packaging scaffold compile and run on MSVC 14.51 / C++20.
 > See [PLAN.md](PLAN.md) for the full design and roadmap.
 
+## What it does that `std::simd` can't
+
+`std::simd` is only the vector type — no algorithms, no compaction, no permute, no
+string ops, no runtime dispatch. SIMDTL fills exactly those gaps:
+
+- **Range algorithms in one call** — `count`, `find`, `min/max/minmax`, `reduce`,
+  `equal/mismatch`, `transform`, `replace` (with `std::simd` you hand-write the loop).
+- **Stream compaction** — `copy_if` / `remove` / `remove_if` / `partition` / `unique`.
+  `std::simd`'s `where()` only blends lanes *in place*; it cannot pack matches into a
+  contiguous prefix. This is the marquee feature.
+- **Cross-lane reverse**, any element size (the `std::simd` TS has no permute).
+- **SSE4.2 string-range ops** — `count_in_range`, `to_lower/upper/flip_case` via
+  `PCMPISTRM` (no `std::simd` analog).
+- **Runtime CPU dispatch** (CPUID + XGETBV) — `std::simd` bakes one ABI per TU.
+
+See the runnable **[examples/showcase.cpp](examples/showcase.cpp)** and its annotated
+output + side-by-side code contrasts in **[docs/SHOWCASE.md](docs/SHOWCASE.md)**.
+
 ## How it's layered
 
 | Layer | What it is | Provided by |

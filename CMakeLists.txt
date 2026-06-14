@@ -8,6 +8,7 @@ project(simdtl
 # ── Options ───────────────────────────────────────────────────────────────────
 option(SIMDTL_BUILD_TESTS      "Build the doctest differential test suite" OFF)
 option(SIMDTL_BUILD_BENCHMARKS "Build the nanobench STL-vs-SIMD benchmarks" OFF)
+option(SIMDTL_BUILD_EXAMPLES   "Build the runnable examples (showcase)" OFF)
 option(SIMDTL_BUILD_M0         "Build the M0 foundation tools (cpu probe + smoke)" OFF)
 option(SIMDTL_FAST_KERNELS     "Compile the opt-in per-/arch intrinsic kernels (M1+)" OFF)
 set(SIMDTL_VIR_SIMD_PROVIDER "vendored" CACHE STRING "How to obtain vir-simd: vendored | fetch | system")
@@ -75,6 +76,9 @@ if(SIMDTL_BUILD_BENCHMARKS)
     target_include_directories(nanobench SYSTEM INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/third_party)   # <nanobench/nanobench.h>
     add_subdirectory(benchmarks)     # M1: nanobench harness
+endif()
+if(SIMDTL_BUILD_EXAMPLES)
+    add_subdirectory(examples)       # runnable showcase
 endif()
 
 # ── Install / export ──────────────────────────────────────────────────────────
