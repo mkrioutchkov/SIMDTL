@@ -27,6 +27,15 @@
 #  endif
 #endif
 
+// MSVC exposes SSE4.2 intrinsics regardless of /arch; GCC/Clang require the using
+// function to be compiled with SSE4.2 enabled. Since this header is pulled into a
+// BASELINE-compiled TU, tag the SSE4.2 functions so they compile on GCC/Clang too.
+#if SIMDTL_ARCH_X86 && (defined(__GNUC__) || defined(__clang__)) && !defined(_MSC_VER)
+#  define SIMDTL_TARGET_SSE42 __attribute__((target("sse4.2")))
+#else
+#  define SIMDTL_TARGET_SSE42
+#endif
+
 namespace simdtl
 {
     namespace detail
@@ -79,7 +88,7 @@ namespace simdtl
 #  endif
         }
 
-        inline std::size_t count_in_range_sse42(const char* s, std::size_t n, char lo, char hi) noexcept
+        inline SIMDTL_TARGET_SSE42 std::size_t count_in_range_sse42(const char* s, std::size_t n, char lo, char hi) noexcept
         {
             // Implicit length on operand1 makes {lo,hi,0,...} exactly one [lo,hi] pair.
             alignas(16) char ranges[16] = {lo, hi};
@@ -97,7 +106,7 @@ namespace simdtl
             return c;
         }
 
-        inline void convert_case_sse42(char* s, std::size_t n, const char* pairs, int npairs) noexcept
+        inline SIMDTL_TARGET_SSE42 void convert_case_sse42(char* s, std::size_t n, const char* pairs, int npairs) noexcept
         {
             alignas(16) char ranges[16] = {0};
             for (int j = 0; j < npairs * 2 && j < 16; ++j) ranges[j] = pairs[j];

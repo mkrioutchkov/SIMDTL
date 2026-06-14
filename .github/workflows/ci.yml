@@ -32,7 +32,16 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
         with: { arch: x64 }
-      - name: Install Ninja
+      # gha-setup-ninja ships only x86_64 binaries, so install Ninja per-OS
+      # (the apt path also covers the arm64 Linux runner).
+      - name: Install Ninja (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+      - name: Install Ninja (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ninja
+      - name: Install Ninja (Windows)
+        if: runner.os == 'Windows'
         uses: seanmiddleditch/gha-setup-ninja@v5
       - name: Configure
         run: cmake -G Ninja -B build
