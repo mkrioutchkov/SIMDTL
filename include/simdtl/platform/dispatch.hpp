@@ -41,4 +41,30 @@ namespace simdtl::platform
             count_i32_installed_level() = lvl;
         }
     }
+
+    // --- remove(value) compaction: returns new logical length (std::remove) ---
+    using remove_i32_fn = std::size_t (*)(std::int32_t*, std::size_t, std::int32_t) noexcept;
+    inline remove_i32_fn& remove_i32_slot() noexcept { static remove_i32_fn fn = nullptr; return fn; }
+    inline isa_level& remove_i32_installed_level() noexcept { static isa_level lvl = isa_level::scalar; return lvl; }
+    inline void register_remove_i32(isa_level lvl, remove_i32_fn fn) noexcept
+    {
+        if (best_isa() >= lvl && (remove_i32_slot() == nullptr || lvl > remove_i32_installed_level()))
+        {
+            remove_i32_slot() = fn;
+            remove_i32_installed_level() = lvl;
+        }
+    }
+
+    // --- reverse in place ---
+    using reverse_i32_fn = void (*)(std::int32_t*, std::size_t) noexcept;
+    inline reverse_i32_fn& reverse_i32_slot() noexcept { static reverse_i32_fn fn = nullptr; return fn; }
+    inline isa_level& reverse_i32_installed_level() noexcept { static isa_level lvl = isa_level::scalar; return lvl; }
+    inline void register_reverse_i32(isa_level lvl, reverse_i32_fn fn) noexcept
+    {
+        if (best_isa() >= lvl && (reverse_i32_slot() == nullptr || lvl > reverse_i32_installed_level()))
+        {
+            reverse_i32_slot() = fn;
+            reverse_i32_installed_level() = lvl;
+        }
+    }
 } // namespace simdtl::platform

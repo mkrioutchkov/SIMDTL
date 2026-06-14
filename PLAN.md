@@ -123,8 +123,13 @@ so the swap is provably one directory.
   std::simd paths, each differential-tested vs the STL across the edge-size matrix
   and int8/16/32/64 + float/double (`tests/test_algorithms.cpp`). Fast intrinsic
   kernels for these remain M3.
-- **M3 — Cross-lane marquee** — `compress_store` (scalar + AVX-512 + AVX2 LUT) →
-  copy_if/remove_if/partition; any-size `reverse_inplace`.
+- **M3 — Cross-lane marquee ✅ (done)** — `compress_store` primitive + `copy_if` /
+  `remove_if` (generic, portable) + `remove(value)` and `reverse` with dispatched
+  AVX2 kernels (LUT+`vpermd` compaction; block-reverse). All differential-tested vs
+  the STL (`tests/test_compaction.cpp`). Results in [docs/M3_RESULTS.md](docs/M3_RESULTS.md):
+  cache-resident `remove` ~1.14× `std::remove`; `reverse` is memory-bandwidth-bound
+  (parity) — correctness is the deliverable, `count` remains the perf headline.
+  AVX-512 `vpcompress` path + `partition`/`unique` remain follow-ups.
 - **M4 — String-range port + polish** — SSE4.2 module + scalar fallback; delete-pass;
   install/export; benchmark report.
 - **M5 (stretch)** — gather/scatter; NEON fast paths; native `<simd>` swap rehearsal.

@@ -20,9 +20,11 @@
 #include "algorithm/equal.hpp"       // M2: equal / mismatch
 #include "algorithm/transform.hpp"   // M2: transform (unary/binary)
 #include "algorithm/replace.hpp"     // M2: replace / replace_if (where()=value)
+#include "crosslane/compress.hpp"    // M3: stream-compaction primitive
+#include "crosslane/reverse.hpp"     // M3: reverse (any element size; AVX2 int32)
+#include "algorithm/copy_if.hpp"     // M3: copy_if / remove_if / remove
 
 // Future milestones (kept here as the public surface map):
-// #include "crosslane/compress.hpp"   // M3: stream compaction
 // #include "crosslane/reverse.hpp"    // M3: any-size reverse
 // #include "algorithm/copy_if.hpp"    // M3: copy_if / remove_if / partition
 // #include "string_range.hpp"         // M4: SSE4.2 case/range ops

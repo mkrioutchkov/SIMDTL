@@ -1,38 +1,38 @@
-# M1 test suite (doctest). The test TU is compiled at BASELINE (no /arch:AVX2) so
-# that the AVX2 path is reached only through runtime dispatch — proving the kernel
-# is selected via CPUID, not baked into the whole binary.
-add_executable(test_count test_count.cpp)
-target_link_libraries(test_count PRIVATE simdtl::simdtl doctest)
+# Tests are compiled at BASELINE (no /arch:AVX2); the AVX2 kernels are added as
+# separate sources compiled with /arch:AVX2, so the wide paths are reached only via
+# runtime dispatch (proving the kernel is selected by CPUID, not baked into the TU).
 
-if(MSVC)
-    target_compile_options(test_count PRIVATE /EHsc /W4 /external:W0)
-else()
-    target_compile_options(test_count PRIVATE -Wall -Wextra)
-endif()
-
-# Opt-in fast kernels: add the per-/arch kernel SOURCE directly (not as a static
-# lib, so the self-registering object is never dropped) and compile only that file
-# with /arch:AVX2.
-if(SIMDTL_FAST_KERNELS)
-    target_sources(test_count PRIVATE ${PROJECT_SOURCE_DIR}/src/kernels/count_avx2.cpp)
-    target_compile_definitions(test_count PRIVATE SIMDTL_HAVE_FAST_KERNELS)
-    if(MSVC)
-        set_source_files_properties(${PROJECT_SOURCE_DIR}/src/kernels/count_avx2.cpp
-            PROPERTIES COMPILE_OPTIONS "/arch:AVX2")
-    else()
-        set_source_files_properties(${PROJECT_SOURCE_DIR}/src/kernels/count_avx2.cpp
-            PROPERTIES COMPILE_OPTIONS "-mavx2;-mpopcnt")
+# Add a per-/arch kernel SOURCE directly to a target (not a static lib, so the
+# self-registering object is never dropped) and compile just that file with AVX2.
+function(simdtl_add_avx2_kernel target src)
+    if(SIMDTL_FAST_KERNELS)
+        target_sources(${target} PRIVATE ${PROJECT_SOURCE_DIR}/src/kernels/${src})
+        target_compile_definitions(${target} PRIVATE SIMDTL_HAVE_FAST_KERNELS)
+        if(MSVC)
+            set_source_files_properties(${PROJECT_SOURCE_DIR}/src/kernels/${src}
+                PROPERTIES COMPILE_OPTIONS "/arch:AVX2")
+        else()
+            set_source_files_properties(${PROJECT_SOURCE_DIR}/src/kernels/${src}
+                PROPERTIES COMPILE_OPTIONS "-mavx2;-mpopcnt")
+        endif()
     endif()
-endif()
+endfunction()
 
-add_test(NAME test_count COMMAND test_count)
+function(simdtl_add_test name)
+    add_executable(${name} ${name}.cpp)
+    target_link_libraries(${name} PRIVATE simdtl::simdtl doctest)
+    if(MSVC)
+        target_compile_options(${name} PRIVATE /EHsc /W4 /external:W0)
+    else()
+        target_compile_options(${name} PRIVATE -Wall -Wextra)
+    endif()
+    add_test(NAME ${name} COMMAND ${name})
+endfunction()
 
-# M2 algorithms (portable std::simd paths only — no kernels needed yet).
-add_executable(test_algorithms test_algorithms.cpp)
-target_link_libraries(test_algorithms PRIVATE simdtl::simdtl doctest)
-if(MSVC)
-    target_compile_options(test_algorithms PRIVATE /EHsc /W4 /external:W0)
-else()
-    target_compile_options(test_algorithms PRIVATE -Wall -Wextra)
-endif()
-add_test(NAME test_algorithms COMMAND test_algorithms)
+simdtl_add_test(test_count)
+simdtl_add_avx2_kernel(test_count count_avx2.cpp)
+
+simdtl_add_test(test_algorithms)   # M2 portable paths only
+
+simdtl_add_test(test_compaction)   # M3 cross-lane
+simdtl_add_avx2_kernel(test_compaction crosslane_avx2.cpp)
