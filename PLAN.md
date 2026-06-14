@@ -129,8 +129,12 @@ so the swap is provably one directory.
   the STL (`tests/test_compaction.cpp`). Results in [docs/M3_RESULTS.md](docs/M3_RESULTS.md):
   cache-resident `remove` ~1.14× `std::remove`; `reverse` is memory-bandwidth-bound
   (parity) — correctness is the deliverable, `count` remains the perf headline.
-  `partition` (stable) + `unique` now added (portable). AVX-512 `vpcompress`
-  remains a follow-up.
+  `partition` (stable) + `unique` now added (portable).
+  **AVX-512 `vpcompress` deferred:** no GitHub Actions runner exposes AVX-512
+  (runners are AMD EPYC 7763 / Zen3 = none, and EPYC 9V74 / Zen4 with AVX-512
+  masked from the guest), so it can't be differential-tested in CI. The dispatch
+  slot is ready (`register_remove_i32(isa_level::avx512, …)`); add it when a
+  capable runner or local AVX-512 box is available.
 - **M4 — String-range port ✅ (done)** — `count_in_range`, `to_lower`/`to_upper`/
   `flip_case` ported from the old `range_comparisons.h` to `string_range.hpp`, using
   SSE4.2 `_mm_cmpistrm`, **runtime-gated on CPUID SSE4.2** (not `__SSE4_2__`) with a
